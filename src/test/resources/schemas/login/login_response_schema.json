@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TokenPair",
+  "description": "A pair of JWT refresh and access tokens.",
+  "type": "object",
+  "properties": {
+    "refresh": {
+      "type": "string",
+      "description": "JWT refresh token. Used to obtain a new access token."
+    },
+    "access": {
+      "type": "string",
+      "description": "JWT access token. Used to authenticate API requests."
+    }
+  },
+  "required": [
+    "refresh",
+    "access"
+  ],
+  "additionalProperties": false
+}
