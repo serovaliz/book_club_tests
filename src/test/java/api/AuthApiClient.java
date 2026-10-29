@@ -12,7 +12,7 @@ import static specs.logout.LogoutSpec.logoutRequestSpec;
 
 public class AuthApiClient {
 
-
+    @Step("Отправка запроса на получение токена")
     public ValidatableResponse getToken(Object body) {
         return given(loginRequestSpec)
                 .body(body)
@@ -21,7 +21,7 @@ public class AuthApiClient {
                 .then();
     }
 
-
+    @Step("Успешная авторизация и получение токенов")
     public ResponseBodyModel getTokenSuccessfully(LoginBodyModel loginData) {
         return getToken(loginData)
                 .spec(successfulLoginResponseSpec)
@@ -29,7 +29,7 @@ public class AuthApiClient {
                 .as(ResponseBodyModel.class);
     }
 
-
+    @Step("Отправка запроса на logout")
     public ValidatableResponse logout(Object body) {
         return given(logoutRequestSpec)
                 .body(body)
