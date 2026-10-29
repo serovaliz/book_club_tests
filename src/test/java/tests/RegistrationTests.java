@@ -1,6 +1,7 @@
 package tests;
 
 
+import api.RegistrationApiClient;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +12,6 @@ import tests.lombok.registration.RegistrationBodyLombockModel;
 import tests.lombok.registration.RegistrationTestResponseLombokModel;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static specs.registration.RegistrationSpec.*;
@@ -19,6 +19,7 @@ import static specs.registration.RegistrationSpec.*;
 
 public class RegistrationTests extends TestBase {
 
+    RegistrationApiClient registrationApi = new RegistrationApiClient();
     String username;
     String password;
 
@@ -41,11 +42,7 @@ public class RegistrationTests extends TestBase {
         registrationData.setPassword(password);
 
         RegistrationTestResponseLombokModel registrationResponse = step("Отправка запроса на регистрацию с валидными данными", () ->
-                given(registrationSpec)
-                        .body(registrationData)
-                        .when()
-                        .post("/users/register/")
-                        .then()
+                registrationApi.register(registrationData)
                         .spec(successfulRegistrationResponseSpec)
                         .extract()
                         .as(RegistrationTestResponseLombokModel.class)
@@ -68,11 +65,7 @@ public class RegistrationTests extends TestBase {
         String registrationData = "{}";
 
         EmptyData400 response = step("Отправка запроса на регистрацию без данных пользователя", () ->
-                given(registrationSpec)
-                        .body(registrationData)
-                        .when()
-                        .post("/users/register/")
-                        .then()
+                registrationApi.register(registrationData)
                         .spec(emptyOrInvalidDataResponseSpec)
                         .extract()
                         .as(EmptyData400.class)
@@ -93,11 +86,7 @@ public class RegistrationTests extends TestBase {
         String registrationData = "{ username: testuser, email: test@example.com ";
 
         InvalidJson400 response = step("Отправка запроса на регистрацию с невалидным JSON", () ->
-                given(registrationSpec)
-                        .body(registrationData)
-                        .when()
-                        .post("/users/register/")
-                        .then()
+                registrationApi.register(registrationData)
                         .spec(emptyOrInvalidDataResponseSpec)
                         .extract()
                         .as(InvalidJson400.class)
@@ -121,11 +110,7 @@ public class RegistrationTests extends TestBase {
                 """;
 
         EmptyData400 response = step("Отправка запроса на регистрацию с null-значениями полей", () ->
-                given(registrationSpec)
-                        .body(registrationData)
-                        .when()
-                        .post("/users/register/")
-                        .then()
+                registrationApi.register(registrationData)
                         .spec(emptyOrInvalidDataResponseSpec)
                         .extract()
                         .as(EmptyData400.class)

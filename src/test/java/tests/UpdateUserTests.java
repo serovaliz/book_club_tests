@@ -1,5 +1,7 @@
 package tests;
 
+import api.AuthApiClient;
+import api.UserApiClient;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,13 +12,13 @@ import tests.lombok.update.UpdateRequestModel;
 import tests.lombok.update.UpdateResponseModel;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.login.LoginSpec.loginRequestSpec;
-import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.update.UpdateSpec.*;
 
 public class UpdateUserTests extends TestBase {
+
+    AuthApiClient authApi = new AuthApiClient();
+    UserApiClient userApi = new UserApiClient();
     String username = "misha";
     String password = "misha";
     String firstName;
@@ -41,13 +43,7 @@ public class UpdateUserTests extends TestBase {
         loginData.setPassword(password);
 
         String accessToken = step("Авторизация и получение access токена", () ->
-                given(loginRequestSpec)
-                        .body(loginData)
-                        .when()
-                        .post("/auth/token/")
-                        .then()
-                        .spec(successfulLoginResponseSpec)
-                        .extract().path("access")
+                authApi.getTokenSuccessfully(loginData).getAccess()
         );
 
         UpdateRequestModel userData = new UpdateRequestModel();
@@ -57,12 +53,7 @@ public class UpdateUserTests extends TestBase {
         userData.setEmail(email);
 
         UpdateResponseModel updateResponse = step("Отправка запроса на обновление данных пользователя", () ->
-                given(updateUserTestSpec)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .body(userData)
-                        .when()
-                        .put("/users/me/")
-                        .then()
+                userApi.updateMe(userData, accessToken)
                         .spec(updateResponseSpec)
                         .extract()
                         .as(UpdateResponseModel.class)
@@ -88,11 +79,7 @@ public class UpdateUserTests extends TestBase {
         userData.setEmail(email);
 
         InvalidCredsResponseModel invalidCredsResponceModel = step("Отправка запроса на обновление без авторизации", () ->
-                given(updateUserTestSpec)
-                        .body(userData)
-                        .when()
-                        .put("/users/me/")
-                        .then()
+                userApi.updateMe(userData)
                         .spec(updateUserWithoutAuthReturns401Spec)
                         .extract()
                         .as(InvalidCredsResponseModel.class)

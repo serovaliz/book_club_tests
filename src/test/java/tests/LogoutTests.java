@@ -1,5 +1,6 @@
 package tests;
 
+import api.AuthApiClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.lombok.login.LoginBodyModel;
@@ -8,16 +9,14 @@ import tests.lombok.logout.LogoutRequestBodyModel;
 import tests.lombok.logout.LogoutResponseBodyModel;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.login.LoginSpec.loginRequestSpec;
-import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.logout.LogoutSpec.*;
 
 
 public class LogoutTests extends TestBase {
 
+    AuthApiClient authApi = new AuthApiClient();
     String username = "qaguru";
     String password = "qaguru123";
 
@@ -28,30 +27,16 @@ public class LogoutTests extends TestBase {
         loginData.setUsername(username);
         loginData.setPassword(password);
 
-        String refreshToken = step("Авторизация и получение токена", () -> {
-            return given(loginRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("refresh");
-
-
-        });
+        String refreshToken = step("Авторизация и получение токена", () ->
+                authApi.getTokenSuccessfully(loginData).getRefresh()
+        );
 
         step("Отправка запроса с refresh токеном и проверка ответа", () -> {
             String logoutData = format("{\"refresh\": \"%s\"}", refreshToken);
 
-            given(logoutRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(successfullLogoutSpec)
-                    .extract();
+            authApi.logout(logoutData)
+                    .spec(successfullLogoutSpec);
         });
-
     }
 
     @Test
@@ -60,11 +45,7 @@ public class LogoutTests extends TestBase {
         LogoutRequestBodyModel emptyData = new LogoutRequestBodyModel();
 
         LogoutEmptyJsonBodyModel logoutResponse = step("Отправка запроса на logout без refresh токена", () ->
-                given(logoutRequestSpec)
-                        .body(emptyData)
-                        .when()
-                        .post("/auth/logout/")
-                        .then()
+                authApi.logout(emptyData)
                         .spec(logoutWithoutTokenTestSpec)
                         .extract()
                         .as(LogoutEmptyJsonBodyModel.class)
@@ -83,11 +64,7 @@ public class LogoutTests extends TestBase {
         invalidData.setRefresh("totally.invalid.token.123");
 
         LogoutResponseBodyModel logoutResponse = step("Отправка запроса на logout с невалидным токеном", () ->
-                given(logoutRequestSpec)
-                        .body(invalidData)
-                        .when()
-                        .post("/auth/logout/")
-                        .then()
+                authApi.logout(invalidData)
                         .spec(logoutWithInvalidTokenTestSpec)
                         .extract()
                         .as(LogoutResponseBodyModel.class)

@@ -1,17 +1,20 @@
 package tests;
 
 
+import api.AuthApiClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.lombok.login.*;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.*;
 
 
 public class LoginTests extends TestBase {
+
+    AuthApiClient authApi = new AuthApiClient();
+
     @Test
     @DisplayName("Успешный логин пользователя")
     public void successfulTestLogin() {
@@ -21,13 +24,7 @@ public class LoginTests extends TestBase {
         loginData.setPassword("misha");
 
         ResponseBodyModel responseBodyModel = step("Отправка запроса на логин с валидными данными", () ->
-                given(loginRequestSpec)
-                        .body(loginData)
-                        .when()
-                        .post("/auth/token/")
-                        .then()
-                        .spec(successfulLoginResponseSpec)
-                        .extract().as(ResponseBodyModel.class)
+                authApi.getTokenSuccessfully(loginData)
         );
 
         step("Проверка access и refresh токенов в ответе", () -> {
@@ -49,11 +46,7 @@ public class LoginTests extends TestBase {
         loginData.setPassword("");
 
         EmptyPasswordResponseModel responseModel = step("Отправка запроса на логин с пустым паролем", () ->
-                given(loginRequestSpec)
-                        .body(loginData)
-                        .when()
-                        .post("/auth/token/")
-                        .then()
+                authApi.getToken(loginData)
                         .spec(emptyUsernameOrPasswordReturns400Spec)
                         .extract().as(EmptyPasswordResponseModel.class)
         );
@@ -74,11 +67,7 @@ public class LoginTests extends TestBase {
         loginData.setPassword("misha");
 
         EmptyLoginResponseModel responseModel = step("Отправка запроса на логин с пустым username", () ->
-                given(loginRequestSpec)
-                        .body(loginData)
-                        .when()
-                        .post("/auth/token/")
-                        .then()
+                authApi.getToken(loginData)
                         .spec(emptyUsernameOrPasswordReturns400Spec)
                         .extract().as(EmptyLoginResponseModel.class)
         );
@@ -99,11 +88,7 @@ public class LoginTests extends TestBase {
         loginData.setPassword("misha");
 
         InvalidUsernameOrPasswordResposeModel resposeModel = step("Отправка запроса на логин с невалидным username", () ->
-                given(loginRequestSpec)
-                        .body(loginData)
-                        .when()
-                        .post("/auth/token/")
-                        .then()
+                authApi.getToken(loginData)
                         .spec(invalidUsernameReturns401Spec)
                         .extract().as(InvalidUsernameOrPasswordResposeModel.class)
         );
