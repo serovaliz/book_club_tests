@@ -2,12 +2,14 @@ package tests;
 
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.lombok.login.LoginBodyModel;
 import tests.lombok.update.InvalidCredsResponseModel;
 import tests.lombok.update.UpdateRequestModel;
 import tests.lombok.update.UpdateResponseModel;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -31,19 +33,22 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Успешное обновление данных пользователя")
     public void updateUserTest() {
 
         LoginBodyModel loginData = new LoginBodyModel();
         loginData.setUsername(username);
         loginData.setPassword(password);
 
-        String accessToken = given(loginRequestSpec)
-                .body(loginData)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().path("access");
+        String accessToken = step("Авторизация и получение access токена", () ->
+                given(loginRequestSpec)
+                        .body(loginData)
+                        .when()
+                        .post("/auth/token/")
+                        .then()
+                        .spec(successfulLoginResponseSpec)
+                        .extract().path("access")
+        );
 
         UpdateRequestModel userData = new UpdateRequestModel();
         userData.setUsername(username);
@@ -51,24 +56,29 @@ public class UpdateUserTests extends TestBase {
         userData.setLastName(lastName);
         userData.setEmail(email);
 
-        UpdateResponseModel updateResponse = given(updateUserTestSpec)
-                .header("Authorization", "Bearer " + accessToken)
-                .body(userData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(updateResponseSpec)
-                .extract()
-                .as(UpdateResponseModel.class);
-        assertThat(updateResponse.getUsername()).isEqualTo(username);
-        assertThat(updateResponse.getEmail()).isEqualTo(email);
-        assertThat(updateResponse.getLastName()).isEqualTo(lastName);
-        assertThat(updateResponse.getFirstName()).isEqualTo(firstName);
-        assertThat(updateResponse.getId()).isNotNull();
+        UpdateResponseModel updateResponse = step("Отправка запроса на обновление данных пользователя", () ->
+                given(updateUserTestSpec)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .body(userData)
+                        .when()
+                        .put("/users/me/")
+                        .then()
+                        .spec(updateResponseSpec)
+                        .extract()
+                        .as(UpdateResponseModel.class)
+        );
 
+        step("Проверка обновлённых полей пользователя в ответе", () -> {
+            assertThat(updateResponse.getUsername()).isEqualTo(username);
+            assertThat(updateResponse.getEmail()).isEqualTo(email);
+            assertThat(updateResponse.getLastName()).isEqualTo(lastName);
+            assertThat(updateResponse.getFirstName()).isEqualTo(firstName);
+            assertThat(updateResponse.getId()).isNotNull();
+        });
     }
 
     @Test
+    @DisplayName("Обновление пользователя без авторизации возвращает 401")
     public void updateUserWithoutAuthReturns401() {
 
         UpdateRequestModel userData = new UpdateRequestModel();
@@ -77,17 +87,20 @@ public class UpdateUserTests extends TestBase {
         userData.setLastName(lastName);
         userData.setEmail(email);
 
-        InvalidCredsResponseModel invalidCredsResponceModel = given(updateUserTestSpec)
-                .body(userData)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(updateUserWithoutAuthReturns401Spec)
-                .extract()
-                .as(InvalidCredsResponseModel.class);
+        InvalidCredsResponseModel invalidCredsResponceModel = step("Отправка запроса на обновление без авторизации", () ->
+                given(updateUserTestSpec)
+                        .body(userData)
+                        .when()
+                        .put("/users/me/")
+                        .then()
+                        .spec(updateUserWithoutAuthReturns401Spec)
+                        .extract()
+                        .as(InvalidCredsResponseModel.class)
+        );
 
-        String ExpectedDetail = "Authentication credentials were not provided.";
-        assertThat(invalidCredsResponceModel.getDetail()).isEqualTo(ExpectedDetail);
-
+        step("Проверка текста ошибки об отсутствии credentials", () -> {
+            String ExpectedDetail = "Authentication credentials were not provided.";
+            assertThat(invalidCredsResponceModel.getDetail()).isEqualTo(ExpectedDetail);
+        });
     }
 }

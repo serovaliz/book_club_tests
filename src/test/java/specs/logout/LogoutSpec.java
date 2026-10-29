@@ -5,6 +5,7 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
+import static allure.CustomAllureListener.withCustomTemplate;
 import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.equalTo;
@@ -12,6 +13,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class LogoutSpec {
     public static RequestSpecification logoutRequestSpec = new RequestSpecBuilder()
+            .addFilter(withCustomTemplate())
             .setContentType(JSON)
             .setBasePath("/api/v1")
             .log(ALL)

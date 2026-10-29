@@ -10,6 +10,7 @@ import tests.lombok.registration.InvalidJson400;
 import tests.lombok.registration.RegistrationBodyLombockModel;
 import tests.lombok.registration.RegistrationTestResponseLombokModel;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,27 +37,29 @@ public class RegistrationTests extends TestBase {
     public void successfulRegistrationTest() {
 
         RegistrationBodyLombockModel registrationData = new RegistrationBodyLombockModel();
-        registrationData.setUsername(username);
+        registrationData.setUsername(username + "1996");
         registrationData.setPassword(password);
 
+        RegistrationTestResponseLombokModel registrationResponse = step("Отправка запроса на регистрацию с валидными данными", () ->
+                given(registrationSpec)
+                        .body(registrationData)
+                        .when()
+                        .post("/users/register/")
+                        .then()
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract()
+                        .as(RegistrationTestResponseLombokModel.class)
+        );
 
-        RegistrationTestResponseLombokModel registrationResponse = given(registrationSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec)
-                .extract()
-                .as(RegistrationTestResponseLombokModel.class);
-        String expectedUsername = registrationResponse.getUsername();
-        assertThat(expectedUsername).isEqualTo(username);
-        assertNotNull(registrationResponse.getId());
-        assertNotNull(registrationResponse.getRemoteAddr());
-        assertThat(registrationResponse.getFirstname()).isNullOrEmpty();
-        assertThat(registrationResponse.getLastName()).isNullOrEmpty();
-        assertThat(registrationResponse.getEmail()).isNullOrEmpty();
-
-
+        step("Проверка полей созданного пользователя в ответе", () -> {
+            String expectedUsername = registrationResponse.getUsername();
+            assertThat(expectedUsername).isEqualTo(username + "1996");
+            assertNotNull(registrationResponse.getId());
+            assertNotNull(registrationResponse.getRemoteAddr());
+            assertThat(registrationResponse.getFirstname()).isNullOrEmpty();
+            assertThat(registrationResponse.getLastName()).isNullOrEmpty();
+            assertThat(registrationResponse.getEmail()).isNullOrEmpty();
+        });
     }
 
     @Test
@@ -64,20 +67,24 @@ public class RegistrationTests extends TestBase {
     public void emptyDataTest() {
         String registrationData = "{}";
 
-        EmptyData400 response = given(registrationSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(emptyOrInvalidDataResponseSpec)
-                .extract()
-                .as(EmptyData400.class);
-        String expectedError = "This field is required.";
-        String actualUsername = response.getUsername().get(0);
-        String actualPassword = response.getPassword().get(0);
-        assertThat(actualUsername).isEqualTo(expectedError);
-        assertThat(actualPassword).isEqualTo(expectedError);
+        EmptyData400 response = step("Отправка запроса на регистрацию без данных пользователя", () ->
+                given(registrationSpec)
+                        .body(registrationData)
+                        .when()
+                        .post("/users/register/")
+                        .then()
+                        .spec(emptyOrInvalidDataResponseSpec)
+                        .extract()
+                        .as(EmptyData400.class)
+        );
 
+        step("Проверка ошибок обязательности полей username и password", () -> {
+            String expectedError = "This field is required.";
+            String actualUsername = response.getUsername().get(0);
+            String actualPassword = response.getPassword().get(0);
+            assertThat(actualUsername).isEqualTo(expectedError);
+            assertThat(actualPassword).isEqualTo(expectedError);
+        });
     }
 
     @Test
@@ -85,19 +92,22 @@ public class RegistrationTests extends TestBase {
     public void invalidJsonTest() {
         String registrationData = "{ username: testuser, email: test@example.com ";
 
-        InvalidJson400 response = given(registrationSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(emptyOrInvalidDataResponseSpec)
-                .extract()
-                .as(InvalidJson400.class);
-        String expectedError = "JSON parse error - unexpected character: line 1 column 3 (char 2)";
-        String actualDetail = response.getDetail();
-        assertThat(actualDetail).isEqualTo(expectedError);
+        InvalidJson400 response = step("Отправка запроса на регистрацию с невалидным JSON", () ->
+                given(registrationSpec)
+                        .body(registrationData)
+                        .when()
+                        .post("/users/register/")
+                        .then()
+                        .spec(emptyOrInvalidDataResponseSpec)
+                        .extract()
+                        .as(InvalidJson400.class)
+        );
 
-
+        step("Проверка текста ошибки парсинга JSON", () -> {
+            String expectedError = "JSON parse error - unexpected character: line 1 column 3 (char 2)";
+            String actualDetail = response.getDetail();
+            assertThat(actualDetail).isEqualTo(expectedError);
+        });
     }
 
     @Test
@@ -110,19 +120,24 @@ public class RegistrationTests extends TestBase {
                 }
                 """;
 
-        EmptyData400 response = given(registrationSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(emptyOrInvalidDataResponseSpec)
-                .extract()
-                .as(EmptyData400.class);
-        String expectedError = "This field may not be null.";
-        String actualUsername = response.getUsername().get(0);
-        String actualPassword = response.getPassword().get(0);
-        assertThat(actualUsername).isEqualTo(expectedError);
-        assertThat(actualPassword).isEqualTo(expectedError);
+        EmptyData400 response = step("Отправка запроса на регистрацию с null-значениями полей", () ->
+                given(registrationSpec)
+                        .body(registrationData)
+                        .when()
+                        .post("/users/register/")
+                        .then()
+                        .spec(emptyOrInvalidDataResponseSpec)
+                        .extract()
+                        .as(EmptyData400.class)
+        );
+
+        step("Проверка ошибок о недопустимости null для username и password", () -> {
+            String expectedError = "This field may not be null.";
+            String actualUsername = response.getUsername().get(0);
+            String actualPassword = response.getPassword().get(0);
+            assertThat(actualUsername).isEqualTo(expectedError);
+            assertThat(actualPassword).isEqualTo(expectedError);
+        });
     }
 
 
