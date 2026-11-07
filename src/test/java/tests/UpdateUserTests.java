@@ -13,7 +13,8 @@ import tests.lombok.update.UpdateResponseModel;
 
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.update.UpdateSpec.*;
+import static specs.update.UpdateSpec.updateResponseSpec;
+import static specs.update.UpdateSpec.updateUserWithoutAuthReturns401Spec;
 
 public class UpdateUserTests extends TestBase {
 
@@ -42,9 +43,8 @@ public class UpdateUserTests extends TestBase {
         loginData.setUsername(username);
         loginData.setPassword(password);
 
-        String accessToken = step("Авторизация и получение access токена", () ->
-                authApi.getTokenSuccessfully(loginData).getAccess()
-        );
+        String accessToken = authApi.getTokenSuccessfully(loginData).getAccess();
+
 
         UpdateRequestModel userData = new UpdateRequestModel();
         userData.setUsername(username);
@@ -52,12 +52,11 @@ public class UpdateUserTests extends TestBase {
         userData.setLastName(lastName);
         userData.setEmail(email);
 
-        UpdateResponseModel updateResponse = step("Отправка запроса на обновление данных пользователя", () ->
-                userApi.updateMe(userData, accessToken)
-                        .spec(updateResponseSpec)
-                        .extract()
-                        .as(UpdateResponseModel.class)
-        );
+        UpdateResponseModel updateResponse = userApi.updateMe(userData, accessToken)
+                .spec(updateResponseSpec)
+                .extract()
+                .as(UpdateResponseModel.class);
+
 
         step("Проверка обновлённых полей пользователя в ответе", () -> {
             assertThat(updateResponse.getUsername()).isEqualTo(username);
@@ -78,12 +77,11 @@ public class UpdateUserTests extends TestBase {
         userData.setLastName(lastName);
         userData.setEmail(email);
 
-        InvalidCredsResponseModel invalidCredsResponceModel = step("Отправка запроса на обновление без авторизации", () ->
-                userApi.updateMe(userData)
-                        .spec(updateUserWithoutAuthReturns401Spec)
-                        .extract()
-                        .as(InvalidCredsResponseModel.class)
-        );
+        InvalidCredsResponseModel invalidCredsResponceModel = userApi.updateMe(userData)
+                .spec(updateUserWithoutAuthReturns401Spec)
+                .extract()
+                .as(InvalidCredsResponseModel.class);
+
 
         step("Проверка текста ошибки об отсутствии credentials", () -> {
             String ExpectedDetail = "Authentication credentials were not provided.";

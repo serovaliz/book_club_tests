@@ -16,8 +16,7 @@ public class LoginSpec {
     public static RequestSpecification loginRequestSpec = with()
             .filter(withCustomTemplate())
             .log().all()
-            .contentType(ContentType.JSON)
-            .basePath("/api/v1");
+            .contentType(ContentType.JSON);
     public static ResponseSpecification successfulLoginResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(200)

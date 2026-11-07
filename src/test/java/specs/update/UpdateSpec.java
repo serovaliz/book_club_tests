@@ -13,8 +13,7 @@ public class UpdateSpec {
     public static RequestSpecification updateUserTestSpec = with()
             .filter(withCustomTemplate())
             .log().all()
-            .contentType(ContentType.JSON)
-            .basePath("/api/v1");
+            .contentType(ContentType.JSON);
 
     public static ResponseSpecification updateResponseSpec = new ResponseSpecBuilder()
             .log(ALL)

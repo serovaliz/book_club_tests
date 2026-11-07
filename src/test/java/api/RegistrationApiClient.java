@@ -9,6 +9,7 @@ import static specs.registration.RegistrationSpec.registrationSpec;
 public class RegistrationApiClient {
 
 
+    @Step("Отправка запроса на регистрацию")
     public ValidatableResponse register(Object body) {
         return given(registrationSpec)
                 .body(body)

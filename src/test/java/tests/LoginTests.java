@@ -8,7 +8,8 @@ import tests.lombok.login.*;
 
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.login.LoginSpec.*;
+import static specs.login.LoginSpec.emptyUsernameOrPasswordReturns400Spec;
+import static specs.login.LoginSpec.invalidUsernameReturns401Spec;
 
 
 public class LoginTests extends TestBase {
@@ -23,9 +24,8 @@ public class LoginTests extends TestBase {
         loginData.setUsername("misha");
         loginData.setPassword("misha");
 
-        ResponseBodyModel responseBodyModel = step("Отправка запроса на логин с валидными данными", () ->
-                authApi.getTokenSuccessfully(loginData)
-        );
+        ResponseBodyModel responseBodyModel = authApi.getTokenSuccessfully(loginData);
+
 
         step("Проверка access и refresh токенов в ответе", () -> {
             String expectedTokenPath = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
@@ -45,11 +45,9 @@ public class LoginTests extends TestBase {
         loginData.setUsername("misha");
         loginData.setPassword("");
 
-        EmptyPasswordResponseModel responseModel = step("Отправка запроса на логин с пустым паролем", () ->
-                authApi.getToken(loginData)
-                        .spec(emptyUsernameOrPasswordReturns400Spec)
-                        .extract().as(EmptyPasswordResponseModel.class)
-        );
+        EmptyPasswordResponseModel responseModel = authApi.getToken(loginData)
+                .spec(emptyUsernameOrPasswordReturns400Spec)
+                .extract().as(EmptyPasswordResponseModel.class);
 
         step("Проверка текста ошибки для поля password", () -> {
             String expectedError = "This field may not be blank.";
@@ -66,11 +64,10 @@ public class LoginTests extends TestBase {
         loginData.setUsername("");
         loginData.setPassword("misha");
 
-        EmptyLoginResponseModel responseModel = step("Отправка запроса на логин с пустым username", () ->
+        EmptyLoginResponseModel responseModel =
                 authApi.getToken(loginData)
                         .spec(emptyUsernameOrPasswordReturns400Spec)
-                        .extract().as(EmptyLoginResponseModel.class)
-        );
+                        .extract().as(EmptyLoginResponseModel.class);
 
         step("Проверка текста ошибки для поля username", () -> {
             String expectedError = "This field may not be blank.";
@@ -87,11 +84,9 @@ public class LoginTests extends TestBase {
         loginData.setUsername("#$#$^^&");
         loginData.setPassword("misha");
 
-        InvalidUsernameOrPasswordResposeModel resposeModel = step("Отправка запроса на логин с невалидным username", () ->
-                authApi.getToken(loginData)
-                        .spec(invalidUsernameReturns401Spec)
-                        .extract().as(InvalidUsernameOrPasswordResposeModel.class)
-        );
+        InvalidUsernameOrPasswordResposeModel resposeModel = authApi.getToken(loginData)
+                .spec(invalidUsernameReturns401Spec)
+                .extract().as(InvalidUsernameOrPasswordResposeModel.class);
 
         step("Проверка текста ошибки авторизации", () -> {
             String expectedError = "Invalid username or password.";

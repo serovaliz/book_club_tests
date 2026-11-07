@@ -14,7 +14,8 @@ import tests.lombok.registration.RegistrationTestResponseLombokModel;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static specs.registration.RegistrationSpec.*;
+import static specs.registration.RegistrationSpec.emptyOrInvalidDataResponseSpec;
+import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
 
 
 public class RegistrationTests extends TestBase {
@@ -41,12 +42,11 @@ public class RegistrationTests extends TestBase {
         registrationData.setUsername(username + "1996");
         registrationData.setPassword(password);
 
-        RegistrationTestResponseLombokModel registrationResponse = step("Отправка запроса на регистрацию с валидными данными", () ->
-                registrationApi.register(registrationData)
-                        .spec(successfulRegistrationResponseSpec)
-                        .extract()
-                        .as(RegistrationTestResponseLombokModel.class)
-        );
+        RegistrationTestResponseLombokModel registrationResponse = registrationApi.register(registrationData)
+                .spec(successfulRegistrationResponseSpec)
+                .extract()
+                .as(RegistrationTestResponseLombokModel.class);
+
 
         step("Проверка полей созданного пользователя в ответе", () -> {
             String expectedUsername = registrationResponse.getUsername();
@@ -64,12 +64,10 @@ public class RegistrationTests extends TestBase {
     public void emptyDataTest() {
         String registrationData = "{}";
 
-        EmptyData400 response = step("Отправка запроса на регистрацию без данных пользователя", () ->
-                registrationApi.register(registrationData)
-                        .spec(emptyOrInvalidDataResponseSpec)
-                        .extract()
-                        .as(EmptyData400.class)
-        );
+        EmptyData400 response = registrationApi.register(registrationData)
+                .spec(emptyOrInvalidDataResponseSpec)
+                .extract()
+                .as(EmptyData400.class);
 
         step("Проверка ошибок обязательности полей username и password", () -> {
             String expectedError = "This field is required.";
@@ -85,12 +83,11 @@ public class RegistrationTests extends TestBase {
     public void invalidJsonTest() {
         String registrationData = "{ username: testuser, email: test@example.com ";
 
-        InvalidJson400 response = step("Отправка запроса на регистрацию с невалидным JSON", () ->
-                registrationApi.register(registrationData)
-                        .spec(emptyOrInvalidDataResponseSpec)
-                        .extract()
-                        .as(InvalidJson400.class)
-        );
+        InvalidJson400 response = registrationApi.register(registrationData)
+                .spec(emptyOrInvalidDataResponseSpec)
+                .extract()
+                .as(InvalidJson400.class);
+
 
         step("Проверка текста ошибки парсинга JSON", () -> {
             String expectedError = "JSON parse error - unexpected character: line 1 column 3 (char 2)";
@@ -109,12 +106,11 @@ public class RegistrationTests extends TestBase {
                 }
                 """;
 
-        EmptyData400 response = step("Отправка запроса на регистрацию с null-значениями полей", () ->
-                registrationApi.register(registrationData)
-                        .spec(emptyOrInvalidDataResponseSpec)
-                        .extract()
-                        .as(EmptyData400.class)
-        );
+        EmptyData400 response = registrationApi.register(registrationData)
+                .spec(emptyOrInvalidDataResponseSpec)
+                .extract()
+                .as(EmptyData400.class);
+
 
         step("Проверка ошибок о недопустимости null для username и password", () -> {
             String expectedError = "This field may not be null.";

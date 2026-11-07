@@ -27,16 +27,14 @@ public class LogoutTests extends TestBase {
         loginData.setUsername(username);
         loginData.setPassword(password);
 
-        String refreshToken = step("Авторизация и получение токена", () ->
-                authApi.getTokenSuccessfully(loginData).getRefresh()
-        );
+        String refreshToken = authApi.getTokenSuccessfully(loginData).getRefresh();
 
-        step("Отправка запроса с refresh токеном и проверка ответа", () -> {
+
             String logoutData = format("{\"refresh\": \"%s\"}", refreshToken);
 
             authApi.logout(logoutData)
                     .spec(successfullLogoutSpec);
-        });
+        ;
     }
 
     @Test
@@ -44,12 +42,11 @@ public class LogoutTests extends TestBase {
     public void logoutWithoutTokenTest() {
         LogoutRequestBodyModel emptyData = new LogoutRequestBodyModel();
 
-        LogoutEmptyJsonBodyModel logoutResponse = step("Отправка запроса на logout без refresh токена", () ->
-                authApi.logout(emptyData)
-                        .spec(logoutWithoutTokenTestSpec)
-                        .extract()
-                        .as(LogoutEmptyJsonBodyModel.class)
-        );
+        LogoutEmptyJsonBodyModel logoutResponse = authApi.logout(emptyData)
+                .spec(logoutWithoutTokenTestSpec)
+                .extract()
+                .as(LogoutEmptyJsonBodyModel.class);
+
 
         step("Проверка текста ошибки для поля refresh", () -> {
             String expectedRefresh = "This field may not be null.";
@@ -63,12 +60,10 @@ public class LogoutTests extends TestBase {
         LogoutRequestBodyModel invalidData = new LogoutRequestBodyModel();
         invalidData.setRefresh("totally.invalid.token.123");
 
-        LogoutResponseBodyModel logoutResponse = step("Отправка запроса на logout с невалидным токеном", () ->
-                authApi.logout(invalidData)
-                        .spec(logoutWithInvalidTokenTestSpec)
-                        .extract()
-                        .as(LogoutResponseBodyModel.class)
-        );
+        LogoutResponseBodyModel logoutResponse = authApi.logout(invalidData)
+                .spec(logoutWithInvalidTokenTestSpec)
+                .extract()
+                .as(LogoutResponseBodyModel.class);
 
         step("Проверка detail и code в ответе об ошибке", () -> {
             String expectedDetail = "Token is invalid";

@@ -15,7 +15,6 @@ public class LogoutSpec {
     public static RequestSpecification logoutRequestSpec = new RequestSpecBuilder()
             .addFilter(withCustomTemplate())
             .setContentType(JSON)
-            .setBasePath("/api/v1")
             .log(ALL)
             .build();
 
