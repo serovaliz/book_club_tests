@@ -1,8 +1,8 @@
 package tests;
 
-
 import api.RegistrationApiClient;
-import net.datafaker.Faker;
+import io.qameta.allure.*;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,30 +16,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static specs.registration.RegistrationSpec.emptyOrInvalidDataResponseSpec;
 import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
+import static tests.testData.TestData.*;
 
-
+@Feature("Registration tests")
 public class RegistrationTests extends TestBase {
 
     RegistrationApiClient registrationApi = new RegistrationApiClient();
     String username;
     String password;
 
-
     @BeforeEach
     public void beforeEach() {
-        Faker faker = new Faker();
-        username = faker.name().firstName();
-        password = faker.name().firstName();
-
+        username = getRandomRegistrationUsername();
+        password = getRandomRegistrationPassword();
     }
 
-
     @Test
-    @DisplayName("Успешная регистрация пользователя в Book Club")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[API] Успешная регистрация пользователя в Book Club")
     public void successfulRegistrationTest() {
-
         RegistrationBodyLombockModel registrationData = new RegistrationBodyLombockModel();
-        registrationData.setUsername(username + "1996");
+        registrationData.setUsername(username);
         registrationData.setPassword(password);
 
         RegistrationTestResponseLombokModel registrationResponse = registrationApi.register(registrationData)
@@ -47,10 +45,8 @@ public class RegistrationTests extends TestBase {
                 .extract()
                 .as(RegistrationTestResponseLombokModel.class);
 
-
         step("Проверка полей созданного пользователя в ответе", () -> {
-            String expectedUsername = registrationResponse.getUsername();
-            assertThat(expectedUsername).isEqualTo(username + "1996");
+            assertThat(registrationResponse.getUsername()).isEqualTo(username);
             assertNotNull(registrationResponse.getId());
             assertNotNull(registrationResponse.getRemoteAddr());
             assertThat(registrationResponse.getFirstname()).isNullOrEmpty();
@@ -60,66 +56,53 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Проверка запроса без передачи данных пользователя")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[API] Проверка запроса без передачи данных пользователя")
     public void emptyDataTest() {
-        String registrationData = "{}";
-
-        EmptyData400 response = registrationApi.register(registrationData)
+        EmptyData400 response = registrationApi.register(EMPTY_JSON_BODY)
                 .spec(emptyOrInvalidDataResponseSpec)
                 .extract()
                 .as(EmptyData400.class);
 
         step("Проверка ошибок обязательности полей username и password", () -> {
-            String expectedError = "This field is required.";
             String actualUsername = response.getUsername().get(0);
             String actualPassword = response.getPassword().get(0);
-            assertThat(actualUsername).isEqualTo(expectedError);
-            assertThat(actualPassword).isEqualTo(expectedError);
+            assertThat(actualUsername).isEqualTo(FIELD_REQUIRED_ERROR);
+            assertThat(actualPassword).isEqualTo(FIELD_REQUIRED_ERROR);
         });
     }
 
     @Test
-    @DisplayName("Проверка регистрации с невалидным JSON")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[API] Проверка регистрации с невалидным JSON")
     public void invalidJsonTest() {
-        String registrationData = "{ username: testuser, email: test@example.com ";
-
-        InvalidJson400 response = registrationApi.register(registrationData)
+        InvalidJson400 response = registrationApi.register(INVALID_JSON_BODY)
                 .spec(emptyOrInvalidDataResponseSpec)
                 .extract()
                 .as(InvalidJson400.class);
 
-
         step("Проверка текста ошибки парсинга JSON", () -> {
-            String expectedError = "JSON parse error - unexpected character: line 1 column 3 (char 2)";
-            String actualDetail = response.getDetail();
-            assertThat(actualDetail).isEqualTo(expectedError);
+            assertThat(response.getDetail()).isEqualTo(INVALID_JSON_ERROR);
         });
     }
 
     @Test
-    @DisplayName("Проверка регистрации с null-значениями полей")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.MINOR)
+    @DisplayName("[API] Проверка регистрации с null-значениями полей")
     public void nullValuesTest() {
-        String registrationData = """
-                {
-                  "username": null,
-                  "password": null
-                }
-                """;
-
-        EmptyData400 response = registrationApi.register(registrationData)
+        EmptyData400 response = registrationApi.register(NULL_VALUES_JSON_BODY)
                 .spec(emptyOrInvalidDataResponseSpec)
                 .extract()
                 .as(EmptyData400.class);
 
-
         step("Проверка ошибок о недопустимости null для username и password", () -> {
-            String expectedError = "This field may not be null.";
             String actualUsername = response.getUsername().get(0);
             String actualPassword = response.getPassword().get(0);
-            assertThat(actualUsername).isEqualTo(expectedError);
-            assertThat(actualPassword).isEqualTo(expectedError);
+            assertThat(actualUsername).isEqualTo(FIELD_NULL_ERROR);
+            assertThat(actualPassword).isEqualTo(FIELD_NULL_ERROR);
         });
     }
-
-
 }

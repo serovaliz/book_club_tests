@@ -9,12 +9,10 @@ import static allure.CustomAllureListener.withCustomTemplate;
 import static io.restassured.RestAssured.with;
 import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
+import static specs.BaseSpec.baseRequestSpec;
 
 public class RegistrationSpec {
-    public static RequestSpecification registrationSpec = with()
-            .filter(withCustomTemplate())
-            .log().all()
-            .contentType(ContentType.JSON);
+    public static RequestSpecification registrationSpec = baseRequestSpec;
     public static ResponseSpecification successfulRegistrationResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(201)

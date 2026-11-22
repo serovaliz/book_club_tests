@@ -1,6 +1,8 @@
 package tests;
 
 import api.AuthApiClient;
+import io.qameta.allure.*;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tests.lombok.login.LoginBodyModel;
@@ -12,33 +14,34 @@ import static io.qameta.allure.Allure.step;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.logout.LogoutSpec.*;
+import static tests.testData.TestData.*;
 
-
+@Feature("Logout tests")
 public class LogoutTests extends TestBase {
 
     AuthApiClient authApi = new AuthApiClient();
-    String username = "qaguru";
-    String password = "qaguru123";
 
     @Test
-    @DisplayName("Успешный logout пользователя")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[API] Успешный logout пользователя")
     public void successfulLogoutTest() {
         LoginBodyModel loginData = new LoginBodyModel();
-        loginData.setUsername(username);
-        loginData.setPassword(password);
+        loginData.setUsername(LOGOUT_USERNAME);
+        loginData.setPassword(LOGOUT_PASSWORD);
 
         String refreshToken = authApi.getTokenSuccessfully(loginData).getRefresh();
 
+        String logoutData = format("{\"refresh\": \"%s\"}", refreshToken);
 
-            String logoutData = format("{\"refresh\": \"%s\"}", refreshToken);
-
-            authApi.logout(logoutData)
-                    .spec(successfullLogoutSpec);
-        ;
+        authApi.logout(logoutData)
+                .spec(successfullLogoutSpec);
     }
 
     @Test
-    @DisplayName("Logout без токена")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[API] Logout без токена")
     public void logoutWithoutTokenTest() {
         LogoutRequestBodyModel emptyData = new LogoutRequestBodyModel();
 
@@ -47,18 +50,18 @@ public class LogoutTests extends TestBase {
                 .extract()
                 .as(LogoutEmptyJsonBodyModel.class);
 
-
         step("Проверка текста ошибки для поля refresh", () -> {
-            String expectedRefresh = "This field may not be null.";
-            assertThat(logoutResponse.getRefresh().get(0)).isEqualTo(expectedRefresh);
+            assertThat(logoutResponse.getRefresh().get(0)).isEqualTo(FIELD_NULL_ERROR);
         });
     }
 
     @Test
-    @DisplayName("Logout с невалидным токеном")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[API] Logout с невалидным токеном")
     public void logoutWithInvalidTokenTest() {
         LogoutRequestBodyModel invalidData = new LogoutRequestBodyModel();
-        invalidData.setRefresh("totally.invalid.token.123");
+        invalidData.setRefresh(INVALID_REFRESH_TOKEN);
 
         LogoutResponseBodyModel logoutResponse = authApi.logout(invalidData)
                 .spec(logoutWithInvalidTokenTestSpec)
@@ -66,10 +69,8 @@ public class LogoutTests extends TestBase {
                 .as(LogoutResponseBodyModel.class);
 
         step("Проверка detail и code в ответе об ошибке", () -> {
-            String expectedDetail = "Token is invalid";
-            String expectedCode = "token_not_valid";
-            assertThat(logoutResponse.getDetail()).isEqualTo(expectedDetail);
-            assertThat(logoutResponse.getCode()).isEqualTo(expectedCode);
+            assertThat(logoutResponse.getDetail()).isEqualTo(INVALID_TOKEN_DETAIL);
+            assertThat(logoutResponse.getCode()).isEqualTo(INVALID_TOKEN_CODE);
         });
     }
 }

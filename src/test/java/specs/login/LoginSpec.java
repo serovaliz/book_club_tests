@@ -11,12 +11,10 @@ import static io.restassured.RestAssured.with;
 import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.hamcrest.Matchers.notNullValue;
+import static specs.BaseSpec.baseRequestSpec;
 
 public class LoginSpec {
-    public static RequestSpecification loginRequestSpec = with()
-            .filter(withCustomTemplate())
-            .log().all()
-            .contentType(ContentType.JSON);
+    public static RequestSpecification loginRequestSpec = baseRequestSpec;
     public static ResponseSpecification successfulLoginResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(200)

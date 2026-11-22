@@ -2,7 +2,8 @@ package tests;
 
 import api.AuthApiClient;
 import api.UserApiClient;
-import net.datafaker.Faker;
+import io.qameta.allure.*;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,42 +16,45 @@ import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.update.UpdateSpec.updateResponseSpec;
 import static specs.update.UpdateSpec.updateUserWithoutAuthReturns401Spec;
+import static tests.testData.TestData.*;
 
+@Feature("Update User tests")
 public class UpdateUserTests extends TestBase {
 
     AuthApiClient authApi = new AuthApiClient();
     UserApiClient userApi = new UserApiClient();
-    String username = "misha";
-    String password = "misha";
+
+
     String firstName;
     String lastName;
     String email;
 
     @BeforeEach
     public void beforeEach() {
-        Faker faker = new Faker();
-        firstName = faker.name().firstName();
-        lastName = faker.name().lastName();
-        email = faker.internet().emailAddress();
 
+        firstName = getRandomFirstName();
+        lastName = getRandomLastName();
+        email = getRandomEmail();
     }
 
     @Test
-    @DisplayName("Успешное обновление данных пользователя")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[API] Успешное обновление данных пользователя")
     public void updateUserTest() {
 
         LoginBodyModel loginData = new LoginBodyModel();
-        loginData.setUsername(username);
-        loginData.setPassword(password);
-
+        loginData.setUsername(USERNAME);
+        loginData.setPassword(PASSWORD);
         String accessToken = authApi.getTokenSuccessfully(loginData).getAccess();
 
 
         UpdateRequestModel userData = new UpdateRequestModel();
-        userData.setUsername(username);
+        userData.setUsername(USERNAME);
         userData.setFirstName(firstName);
         userData.setLastName(lastName);
         userData.setEmail(email);
+
 
         UpdateResponseModel updateResponse = userApi.updateMe(userData, accessToken)
                 .spec(updateResponseSpec)
@@ -59,7 +63,7 @@ public class UpdateUserTests extends TestBase {
 
 
         step("Проверка обновлённых полей пользователя в ответе", () -> {
-            assertThat(updateResponse.getUsername()).isEqualTo(username);
+            assertThat(updateResponse.getUsername()).isEqualTo(USERNAME);
             assertThat(updateResponse.getEmail()).isEqualTo(email);
             assertThat(updateResponse.getLastName()).isEqualTo(lastName);
             assertThat(updateResponse.getFirstName()).isEqualTo(firstName);
@@ -68,24 +72,24 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Обновление пользователя без авторизации возвращает 401")
+    @Owner("serovaliz")
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[API] Обновление пользователя без авторизации возвращает 401")
     public void updateUserWithoutAuthReturns401() {
-
         UpdateRequestModel userData = new UpdateRequestModel();
-        userData.setUsername(username);
+        userData.setUsername(USERNAME);
         userData.setFirstName(firstName);
         userData.setLastName(lastName);
         userData.setEmail(email);
 
-        InvalidCredsResponseModel invalidCredsResponceModel = userApi.updateMe(userData)
+        InvalidCredsResponseModel invalidCredsResponseModel = userApi.updateMe(userData)
                 .spec(updateUserWithoutAuthReturns401Spec)
                 .extract()
                 .as(InvalidCredsResponseModel.class);
 
-
         step("Проверка текста ошибки об отсутствии credentials", () -> {
-            String ExpectedDetail = "Authentication credentials were not provided.";
-            assertThat(invalidCredsResponceModel.getDetail()).isEqualTo(ExpectedDetail);
+
+            assertThat(invalidCredsResponseModel.getDetail()).isEqualTo(AUTH_CREDENTIALS_ERROR);
         });
     }
 }

@@ -8,12 +8,10 @@ import io.restassured.specification.ResponseSpecification;
 import static allure.CustomAllureListener.withCustomTemplate;
 import static io.restassured.RestAssured.with;
 import static io.restassured.filter.log.LogDetail.ALL;
+import static specs.BaseSpec.baseRequestSpec;
 
 public class UpdateSpec {
-    public static RequestSpecification updateUserTestSpec = with()
-            .filter(withCustomTemplate())
-            .log().all()
-            .contentType(ContentType.JSON);
+    public static RequestSpecification updateUserTestSpec = baseRequestSpec;
 
     public static ResponseSpecification updateResponseSpec = new ResponseSpecBuilder()
             .log(ALL)

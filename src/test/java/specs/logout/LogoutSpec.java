@@ -10,13 +10,10 @@ import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static specs.BaseSpec.baseRequestSpec;
 
 public class LogoutSpec {
-    public static RequestSpecification logoutRequestSpec = new RequestSpecBuilder()
-            .addFilter(withCustomTemplate())
-            .setContentType(JSON)
-            .log(ALL)
-            .build();
+    public static RequestSpecification logoutRequestSpec = baseRequestSpec;
 
     public static ResponseSpecification successfullLogoutSpec = new ResponseSpecBuilder()
             .log(ALL)

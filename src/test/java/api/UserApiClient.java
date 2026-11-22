@@ -3,8 +3,12 @@ package api;
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import tests.lombok.clubs.ClubsListResponseModel;
 
 import static io.restassured.RestAssured.given;
+import static specs.clubs.ClubsSpec.clubsRequestSpec;
+import static specs.clubs.ClubsSpec.successfulClubsListResponseSpec;
+import static specs.update.GetUserSpec.*;
 import static specs.update.UpdateSpec.updateUserTestSpec;
 
 public class UserApiClient {
@@ -27,4 +31,10 @@ public class UserApiClient {
                 .put("/users/me/")
                 .then();
     }
+
+
+
+
+
+
 }
