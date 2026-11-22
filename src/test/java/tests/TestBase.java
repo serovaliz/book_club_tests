@@ -8,6 +8,9 @@ import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.openqa.selenium.remote.DesiredCapabilities;
+
+import java.util.Map;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.hasWebDriverStarted;
@@ -33,7 +36,7 @@ public class TestBase {
         Configuration.screenshots = true;
         Configuration.savePageSource = true;
         Configuration.timeout = 10000;
-/*        DesiredCapabilities capabilities = new DesiredCapabilities();
+        DesiredCapabilities capabilities = new DesiredCapabilities();
         capabilities.setCapability("selenoid:options", Map.<String, Object>of(
                 "enableVNC", true,
                 "enableVideo", true,
@@ -45,7 +48,7 @@ public class TestBase {
                 ":" +
                 System.getProperty("remoteBrowserUrlPassword") +
                 "@" +
-                System.getProperty("remoteBrowserUrl", "selenoid.autotests.cloud/wd/hub");*/
+                System.getProperty("remoteBrowserUrl", "selenoid.autotests.cloud/wd/hub");
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide().screenshots(true).savePageSource(true));
     }
 
